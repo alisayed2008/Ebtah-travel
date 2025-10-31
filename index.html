@@ -451,28 +451,15 @@ document.querySelectorAll('#bookingForm input, #bookingForm select').forEach(el=
 document.getElementById('tripSelect').addEventListener('change', updateSummary);
 numPeople.addEventListener('change', updateSummary);
 passportFile.addEventListener('change', updateSummary);
-if (data.iframe_url) {
-  // إزالة أي iframe سابق
-  const existing = document.getElementById('paymob-iframe-wrapper');
-  if (existing) existing.remove();
 
-  // إنشاء حاوية للـ iframe وادراجها أسفل عمود الملخص (أو يمكنك تغييره لمكان آخر)
-  const wrapper = document.createElement('div');
-  wrapper.id = 'paymob-iframe-wrapper';
-  wrapper.style.marginTop = '12px';
-  wrapper.innerHTML = `<iframe src="${data.iframe_url}" style="width:100%;height:640px;border:none;border-radius:10px;"></iframe>`;
-
-  // نلصق الحاوية داخل الـ aside.summary (هي العنصر الموجود بجانب الفورم)
-  const summaryEl = document.querySelector('.summary');
-  if (summaryEl) summaryEl.appendChild(wrapper);
-  else document.body.appendChild(wrapper); // fallback
-
-} else {
-  showToast('لم يتم استلام رابط الدفع من السيرفر');
-}
+// النهاية — لا شيء بعد هذا السطر
+</script>
+</body>
+</html>
 
 </script>
 </body>
 </html>
+
 
 
