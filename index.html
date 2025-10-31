@@ -407,40 +407,50 @@ bookNowBtn.addEventListener('click', async (e)=>{
   e.preventDefault();
   if(!validateForPayment()){ showToast('الرجاء ملء جميع الحقول'); return; }
   const booking = collectForm();
-  // save locally as unpaid before redirect to الدفع
+
+  // حفظ محلي مؤقت
   const arr = JSON.parse(localStorage.getItem(BOOKINGS_KEY) || '[]');
   arr.push(Object.assign({id:Date.now(), paid:false}, booking));
   localStorage.setItem(BOOKINGS_KEY, JSON.stringify(arr));
 
-  // ===== تعديل هنا: عدّل SERVER_BASE إذا السيرفر مش على localhost =====
+  // ضع هنا عنوان السيرفر الصحيح
   const SERVER_BASE = 'http://localhost:3000';
 
   try{
+    console.log('-> Creating payment at', `${SERVER_BASE}/api/create_payment`, 'payload=', booking);
+    showToast('إنشاء عملية الدفع...', 3000);
+
+    const controller = new AbortController();
+    const timeout = setTimeout(()=> controller.abort(), 15000); // 15s timeout
+
     const res = await fetch(`${SERVER_BASE}/api/create_payment`, {
       method:'POST',
       headers:{'Content-Type':'application/json'},
-      body: JSON.stringify(booking)
+      body: JSON.stringify(booking),
+      signal: controller.signal
     });
+    clearTimeout(timeout);
 
     if(!res.ok){
       const txt = await res.text();
       console.error('create_payment error', res.status, txt);
-      showToast('فشل إنشاء الدفع (خطأ من الخادم). افتح console للمزيد.');
+      showToast('فشل إنشاء الدفع — تحقق من السيرفر (فتح Console)');
       return;
     }
 
     let data;
-    try{
-      data = await res.json();
-    }catch(parseErr){
+    try { data = await res.json(); }
+    catch(parseErr){
       const txt = await res.text();
-      console.error('Invalid JSON response:', txt);
-      showToast('الخادم لم يُرجع JSON صالحًا');
+      console.error('Invalid JSON from server:', txt);
+      showToast('استجابة الخادم غير صالحة (راجع Console)');
       return;
     }
 
-    // عرض iframe داخل العمود الأيمن (.summary)
+    console.log('create_payment response', data);
+
     if (data.iframe_url) {
+      // remove any existing wrapper
       const existing = document.getElementById('paymob-iframe-wrapper');
       if (existing) existing.remove();
       const wrapper = document.createElement('div');
@@ -450,16 +460,19 @@ bookNowBtn.addEventListener('click', async (e)=>{
       const summaryEl = document.querySelector('.summary');
       if (summaryEl) summaryEl.appendChild(wrapper);
       else document.body.appendChild(wrapper);
+      showToast('تم إنشاء الدفع — افتح الإطار لإتمام الدفع', 4000);
     } else {
       console.error('no iframe_url in response', data);
-      showToast('لم يتم استلام رابط الدفع من السيرفر');
+      showToast('الخادم لم يُعد رابط الدفع (راجع Console)');
     }
 
   }catch(err){
     console.error('Network / other error', err);
-    showToast('خطأ في الاتصال بالسيرفر');
+    if (err.name === 'AbortError') showToast('انتهى وقت الاتصال بالسيرفر (timeout)');
+    else showToast('فشل الاتصال بالسيرفر — افتح Console للمزيد');
   }
 });
+
 
 /* ------- تحديث الملخص أثناء الكتابة ------- */
 function updateSummary(){
@@ -486,3 +499,4 @@ passportFile.addEventListener('change', updateSummary);
 </script>
 </body>
 </html>
+
