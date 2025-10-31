@@ -463,6 +463,9 @@ bookNowBtn.addEventListener('click', async (e)=>{
   }
 });
 
+// في سيرفر Express:
+import cors from 'cors';
+app.use(cors({ origin: 'https://ebtah.netlify.app' })); // أو '*' أثناء التطوير
 
 /* ------- تحديث الملخص أثناء الكتابة ------- */
 function updateSummary(){
@@ -487,13 +490,11 @@ numPeople.addEventListener('change', updateSummary);
 passportFile.addEventListener('change', updateSummary);
 
 // النهاية — لا شيء بعد هذا السطر
-</script>
-</body>
-</html>
 
 </script>
 </body>
 </html>
+
 
 
 
