@@ -451,10 +451,28 @@ document.querySelectorAll('#bookingForm input, #bookingForm select').forEach(el=
 document.getElementById('tripSelect').addEventListener('change', updateSummary);
 numPeople.addEventListener('change', updateSummary);
 passportFile.addEventListener('change', updateSummary);
+if (data.iframe_url) {
+  // إزالة أي iframe سابق
+  const existing = document.getElementById('paymob-iframe-wrapper');
+  if (existing) existing.remove();
+
+  // إنشاء حاوية للـ iframe وادراجها أسفل عمود الملخص (أو يمكنك تغييره لمكان آخر)
+  const wrapper = document.createElement('div');
+  wrapper.id = 'paymob-iframe-wrapper';
+  wrapper.style.marginTop = '12px';
+  wrapper.innerHTML = `<iframe src="${data.iframe_url}" style="width:100%;height:640px;border:none;border-radius:10px;"></iframe>`;
+
+  // نلصق الحاوية داخل الـ aside.summary (هي العنصر الموجود بجانب الفورم)
+  const summaryEl = document.querySelector('.summary');
+  if (summaryEl) summaryEl.appendChild(wrapper);
+  else document.body.appendChild(wrapper); // fallback
+
+} else {
+  showToast('لم يتم استلام رابط الدفع من السيرفر');
+}
 
 </script>
-
-<script> document.addEventListener("DOMContentLoaded", () => { const form = document.querySelector("#booking-form"); const payBtn = document.querySelector("#pay-now"); const iframeContainer = document.querySelector("#payment-frame"); const messageBox = document.querySelector("#form-message"); payBtn.addEventListener("click", async (e) => { e.preventDefault(); // جمع بيانات الفورم const bookerName = document.querySelector("#booker-name")?.value.trim(); const phone = document.querySelector("#booker-phone")?.value.trim(); const trip = document.querySelector("#trip-select")?.value.trim(); const numPeople = document.querySelector("#num-people")?.value.trim(); // تحقق إن كل الحقول المهمة متعبيه if (!bookerName || !phone || !trip || !numPeople) { showMessage("الرجاء ملء جميع الحقول المطلوبة", "error"); return; } // ابعت البيانات للسيرفر try { showMessage("جاري إنشاء عملية الدفع...", "info"); const response = await fetch("/api/create_payment", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ bookerName, phone, trip, numPeople, }), }); const data = await response.json(); if (!data.ok || !data.iframe_url) throw new Error(data.message || "فشل إنشاء الدفع"); showMessage("تم إنشاء الدفع، جاري التحميل...", "success"); // إظهار iframe الدفع داخل الصفحة iframeContainer.innerHTML = <iframe src="${data.iframe_url}" style="width:100%; height:600px; border:none; border-radius:12px;"></iframe> ; // احفظ بيانات الحجز في localStorage localStorage.setItem("lastBooking", JSON.stringify({ bookerName, phone, trip, numPeople, orderId: data.orderId })); } catch (err) { console.error(err); showMessage("حدث خطأ أثناء إنشاء الدفع: " + err.message, "error"); } }); function showMessage(text, type) { messageBox.textContent = text; messageBox.style.color = type === "error" ? "#f33" : type === "success" ? "#0c0" : "#ddd"; messageBox.style.opacity = 1; setTimeout(() => (messageBox.style.opacity = 0), 3000); } // استرجاع آخر بيانات حجز (إن وجدت) const last = localStorage.getItem("lastBooking"); if (last) { const b = JSON.parse(last); if (b.bookerName) document.querySelector("#booker-name").value = b.bookerName; if (b.phone) document.querySelector("#booker-phone").value = b.phone; if (b.trip) document.querySelector("#trip-select").value = b.trip; if (b.numPeople) document.querySelector("#num-people").value = b.numPeople; } }); </script>
 </body>
 </html>
+
 
