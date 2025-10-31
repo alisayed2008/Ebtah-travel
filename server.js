@@ -11,7 +11,7 @@ app.use(express.json({ limit: '5mb' }));
 app.use(cors()); // للسماح بطلبات من المتصفح أثناء التطوير
 
 const PORT = process.env.PORT || 3000;
-const PAYMOB_API_KEY = process.env.PAYMOB_API_KEY || '<ضع-مفتاح-الـAPI-هنا>';
+const PAYMOB_API_KEY = process.env.PAYMOB_API_KEY || '<ZXlKaGJHY2lPaUpJVXpVeE1pSXNJblI1Y0NJNklrcFhWQ0o5LmV5SmpiR0Z6Y3lJNklrMWxjbU5vWVc1MElpd2ljSEp2Wm1sc1pWOXdheUk2TVRBM01qRTNNaXdpYm1GdFpTSTZJbWx1YVhScFlXd2lmUS5RU3U4VDdjQkdaZURVeEk5M0RRRmxMT0ltSDNya0ZkckplbXozSDJhSDM0dzhPRFNGaDZoRkNRcGZ3UzFKQ1hxSEd2aGkxUFpMV2U3YVdYcnJROVRJZw== Secret>';
 const INTEGRATION_ID = process.env.PAYMOB_INTEGRATION_ID || '5257399';
 const IFRAME_ID = process.env.PAYMOB_IFRAME_ID || '954210';
 
@@ -93,3 +93,4 @@ app.post('/api/create_payment', async (req, res) => {
 });
 
 app.listen(PORT, () => console.log(`Server listening on http://localhost:${PORT}`));
+
