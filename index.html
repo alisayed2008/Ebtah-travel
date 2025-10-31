@@ -1,0 +1,450 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>نموذج حجز</title>
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#f7dcb9;
+  --header:#dedede;
+  --accent:#c96b6b;
+  --accent-dark:#b25555;
+  --muted:#6b6b6b;
+  --req-red:#d54848;
+  --white:#ffffff;
+  --card-shadow: 0 12px 30px rgba(0,0,0,0.08);
+  --gap:14px;
+}
+*{box-sizing:border-box;font-family:'Cairo',sans-serif}
+body{margin:0;background:var(--bg);color:#222;-webkit-font-smoothing:antialiased}
+
+/* header */
+.topbar{
+  height:72px;background:var(--header);display:flex;align-items:center;justify-content:space-between;padding:0 18px;box-shadow:0 6px 18px rgba(0,0,0,0.04);
+  position:sticky;top:0;z-index:50;
+}
+.logo img{height:56px;display:block}
+
+/* container */
+.container{max-width:1100px;margin:18px auto;padding:14px}
+
+/* options row (distributed across frame) */
+.options-frame{background:#fff;border-radius:12px;padding:12px;margin-bottom:16px;box-shadow:var(--card-shadow)}
+.options-row{display:flex;gap:var(--gap);justify-content:space-between;align-items:stretch}
+.option{flex:1 1 22%;min-width:140px;border-radius:10px;padding:8px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:8px;transition:transform .18s,box-shadow .18s,background .18s}
+.option img{width:100%;height:110px;object-fit:cover;border-radius:8px}
+.option .label{font-weight:800;color:#222;text-align:center}
+.option.selected{transform:translateY(-6px);box-shadow:0 18px 40px rgba(0,0,0,0.12);background:linear-gradient(180deg,var(--accent),var(--accent-dark));color:var(--white)}
+.option.selected .label{color:var(--white)}
+
+/* main layout */
+.main{display:flex;gap:18px}
+.card{background:rgba(255,255,255,0.02);border-radius:12px;padding:14px;box-shadow:0 8px 26px rgba(0,0,0,0.03)}
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.field{background:var(--accent);padding:12px;border-radius:10px;color:#fff;position:relative}
+.field input, .field select{width:100%;border:none;background:transparent;color:#fff;font-size:16px;outline:none}
+.field input::placeholder{color:rgba(255,255,255,0.95)} /* placeholder أبيض واضح */
+.helper{font-size:12px;text-align:left;color:#fff;margin-top:8px} /* helper على الشمال */
+.req-under{font-size:13px;color:var(--req-red);text-align:right;margin-top:6px;font-weight:800}
+
+/* type-specific container full width */
+.type-specific{grid-column:1/3}
+
+/* upload box (position relative so only this input opens dialog) */
+.upload-box{grid-column:1/3;border:2px dashed rgba(0,0,0,0.12);border-radius:10px;padding:12px;display:flex;gap:12px;align-items:center;min-height:120px;position:relative;background:#fff}
+.upload-box img{width:140px;height:96px;object-fit:cover;border-radius:6px}
+.upload-box .txt{font-size:14px;color:#333}
+.upload-box input[type="file"]{position:absolute;inset:0;opacity:0;cursor:pointer;border:0;padding:0;margin:0}
+
+/* actions */
+.actions{display:flex;gap:12px;margin-top:12px}
+.btn{padding:10px 18px;border-radius:40px;border:none;cursor:pointer;font-weight:700}
+.save-btn{background:var(--accent-dark);color:#fff}
+.pay-btn{background:var(--accent);color:#fff}
+
+/* summary */
+.summary{width:320px}
+.summary .title{font-weight:900;color:#222;margin-bottom:8px}
+.summary .row{font-size:14px;color:#333;margin-bottom:6px}
+.summary .small{font-size:13px;color:var(--muted)}
+
+/* toast */
+.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:22px;background:rgba(0,0,0,0.82);color:#fff;padding:10px 14px;border-radius:10px;opacity:0;pointer-events:none;transition:opacity .18s}
+
+/* responsive */
+@media (max-width:860px){
+  .main{flex-direction:column}
+  .options-row{gap:10px;flex-wrap:wrap}
+  .option{flex:0 0 46%}
+}
+@media (max-width:520px){
+  .option{flex:0 0 46%}
+  .upload-box img{width:100px;height:72px}
+  .summary{width:100%}
+}
+</style>
+</head>
+<body>
+  <header class="topbar">
+    <div class="logo"><img id="logoImg" src="https://your-server.com/assets/logo.png" alt="logo"></div>
+    <div style="display:flex;gap:10px;align-items:center">
+      <!-- استبدل برابط الـ svg عندك -->
+      <a href="https://maps.google.com" target="_blank" rel="noopener"><img src="https://your-server.com/assets/map.svg" alt="map" width="36" height="36"></a>
+      <a href="https://facebook.com" target="_blank" rel="noopener"><img src="https://your-server.com/assets/facebook.svg" alt="fb" width="36" height="36"></a>
+    </div>
+  </header>
+
+  <main class="container">
+    <!-- خيارات الرحلات -->
+    <section class="options-frame">
+      <div class="options-row" id="optionsRow">
+        <div class="option selected" data-type="omra" data-id="omra">
+          <img src="https://your-server.com/assets/omra.jpg" alt="رحلة عمرة">
+          <div class="label">رحلة عمرة</div>
+        </div>
+
+        <div class="option" data-type="hajj" data-id="hajj">
+          <img src="https://your-server.com/assets/hajj.jpg" alt="رحلة حج">
+          <div class="label">رحلة حج</div>
+        </div>
+
+        <div class="option" data-type="flight" data-id="flight">
+          <img src="https://your-server.com/assets/flight.jpg" alt="تذاكر طيران">
+          <div class="label">تذاكر طيران</div>
+        </div>
+
+        <div class="option" data-type="internal" data-id="internal">
+          <img src="https://your-server.com/assets/internal.jpg" alt="رحلات داخلية">
+          <div class="label">رحلات داخلية</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- نموذج الحجز -->
+    <section class="main">
+      <div style="flex:1">
+        <div class="card" id="formCard">
+          <form id="bookingForm" onsubmit="return false">
+            <div class="form-grid">
+              <!-- اسم الحاجز -->
+              <div>
+                <div class="field"><input id="bookerName" type="text" placeholder="اسم الحاجز"></div>
+                <div class="helper">اسم الشخص الذي سيدفع مبلغ الحجز</div>
+                <div class="req-under" id="req-booker">* مطلوب</div>
+              </div>
+
+              <!-- اختر الرحلة (select فقط) -->
+              <div>
+                <div class="field">
+                  <select id="tripSelect" aria-label="اختر الرحلة">
+                    <option value="">-- اختر الرحلة --</option>
+                  </select>
+                </div>
+                <div class="helper">اسم \ تاريخ الرحلة المراد</div>
+                <div class="req-under" id="req-trip">* مطلوب</div>
+              </div>
+
+              <!-- عدد الأفراد -->
+              <div>
+                <div class="field"><select id="numPeople" aria-label="عدد الأفراد"></select></div>
+                <div class="helper">عدد أفراد الرحلة</div>
+                <div class="req-under" id="req-num">* مطلوب</div>
+              </div>
+
+              <!-- رقم الهاتف -->
+              <div>
+                <div class="field"><input id="phone" type="tel" placeholder="رقم الهاتف"></div>
+                <div class="helper">رقم هاتف الحاجز</div>
+                <div class="req-under" id="req-phone">* مطلوب</div>
+              </div>
+
+              <!-- اسم الفرد الأول -->
+              <div>
+                <div class="field"><input id="name1" type="text" placeholder="اسم الفرد الأول"></div>
+                <div class="helper">ضع اسم الفرد الأول كامل كما في بطاقته</div>
+                <div class="req-under" id="req-name1">* مطلوب</div>
+              </div>
+
+              <!-- أسماء إضافية -->
+              <div id="additionalNames" class="type-specific"></div>
+
+              <!-- حقول خاصة بالنوع -->
+              <div id="typeSpecific" class="type-specific"></div>
+
+              <!-- صندوق رفع صورة الجواز -->
+              <div style="grid-column:1/3">
+                <div class="upload-box" id="passportBox" title="اضغط لرفع صورة الجواز">
+                  <img id="passportPreview" src="https://your-server.com/assets/passport-placeholder.jpg" alt="preview">
+                  <div class="txt">
+                    <div style="font-weight:800;color:#222">ضع صورة الجواز</div>
+                    <div style="color:#666;font-size:13px;margin-top:6px">ارفع صورة جواز سفر الفرد بشكل واضح حيث يظهر فيه التفاصيل كاملة</div>
+                    <div class="req-under" id="req-passport">* مطلوب</div>
+                  </div>
+                  <input type="file" id="passportFile" accept="image/*" />
+                </div>
+              </div>
+
+            </div>
+
+            <div class="actions">
+              <button class="btn save-btn" id="saveBtn">احفظ الحجز</button>
+              <button class="btn pay-btn" id="bookNowBtn">احجز الآن &lt;</button>
+            </div>
+          </form>
+        </div>
+      </div>
+
+      <aside class="summary">
+        <div class="card">
+          <div class="title">ملخص الحجز</div>
+          <div id="summaryContent">
+            <div class="row">الاسم: —</div>
+            <div class="row">الرحلة: —</div>
+            <div class="row">عدد الأفراد: —</div>
+            <div class="row">أسماء المسافرين: —</div>
+            <div class="row">الهاتف: —</div>
+            <div class="row">صورة الجواز: —</div>
+          </div>
+          <div class="small" style="margin-top:10px">سيتم تحديث الملخص أثناء تعبئة النموذج</div>
+        </div>
+      </aside>
+    </section>
+  </main>
+
+  <div class="toast" id="toast">الرجاء ملء جميع الحقول</div>
+
+<script>
+/* ------- بيانات الرحلات (سهل تبديلها) ------- */
+const TRIPS = [
+  {id:'omra-1', title:'عمرة اقتصادية - 7 أيام', price:1200},
+  {id:'omra-2', title:'عمرة مميزة - 10 أيام', price:2000},
+  {id:'hajj-1', title:'حج - مجموعة 15 يوم', price:8000},
+  {id:'flight-1', title:'طيران داخلي - القاهرة-الأسكندرية', price:500}
+];
+
+/* ------- عناصر DOM ------- */
+const options = document.querySelectorAll('.option');
+const tripSelect = document.getElementById('tripSelect');
+const numPeople = document.getElementById('numPeople');
+const additionalNames = document.getElementById('additionalNames');
+const typeSpecific = document.getElementById('typeSpecific');
+const passportFile = document.getElementById('passportFile');
+const passportPreview = document.getElementById('passportPreview');
+const saveBtn = document.getElementById('saveBtn');
+const bookNowBtn = document.getElementById('bookNowBtn');
+const toast = document.getElementById('toast');
+const summaryContent = document.getElementById('summaryContent');
+
+/* ------- تهيئة القوائم ------- */
+function initTrips(){
+  tripSelect.innerHTML = '<option value="">-- اختر الرحلة --</option>';
+  TRIPS.forEach(t=>{
+    const o = document.createElement('option');
+    o.value = t.id; o.textContent = t.title;
+    tripSelect.appendChild(o);
+  });
+}
+initTrips();
+
+for(let i=1;i<=10;i++){
+  const opt = document.createElement('option');
+  opt.value = i; opt.textContent = i;
+  numPeople.appendChild(opt);
+}
+numPeople.value = 1;
+
+/* ------- سلوك الضغط على خيارات الصور العلوية ------- */
+options.forEach(opt=>{
+  opt.addEventListener('click', ()=>{
+    options.forEach(x=>x.classList.remove('selected'));
+    opt.classList.add('selected');
+    const t = opt.dataset.type;
+    renderTypeSpecific(t);
+    updateSummary();
+    // scroll form into view
+    document.querySelector('#formCard').scrollIntoView({behavior:'smooth', block:'center'});
+  });
+});
+
+/* ------- بناء حقول أسماء إضافية ------- */
+function buildNameFields(n){
+  additionalNames.innerHTML = '';
+  for(let i=2;i<=n;i++){
+    const wrap = document.createElement('div');
+    wrap.innerHTML = `<div class="field"><input id="name${i}" type="text" placeholder="اسم الفرد ${i}"></div><div class="helper">ضع اسم الفرد ${i} كامل كما في بطاقته</div><div class="req-under" id="req-name${i}">* مطلوب</div>`;
+    additionalNames.appendChild(wrap);
+  }
+}
+buildNameFields(1);
+numPeople.addEventListener('change', ()=> buildNameFields(parseInt(numPeople.value||1)));
+
+/* ------- حقول خاصة بنوع الرحلة (أبقيتها بسيطة كما في الأصل) ------- */
+function renderTypeSpecific(type){
+  typeSpecific.innerHTML = '';
+  if(type === 'omra'){
+    typeSpecific.innerHTML = `<div class="field"><input id="omraHotel" type="text" placeholder="الفندق المفضل (اختياري)"></div>`;
+  } else if(type === 'hajj'){
+    typeSpecific.innerHTML = `<div class="field"><input id="groupName" type="text" placeholder="اسم المجموعة (اختياري)"></div>`;
+  } else if(type === 'flight'){
+    typeSpecific.innerHTML = `<div class="field"><input id="flightNo" type="text" placeholder="رقم الرحلة (اختياري)"></div>`;
+  } else {
+    typeSpecific.innerHTML = `<div class="field"><input id="pickup" type="text" placeholder="نقطة الانطلاق (اختياري)"></div>`;
+  }
+}
+
+/* ------- معاينة صورة الجواز (هذا هو الملف الوحيد الذي يفتح) ------- */
+passportFile.addEventListener('change', e=>{
+  const f = e.target.files[0];
+  if(!f) return;
+  const reader = new FileReader();
+  reader.onload = ev => passportPreview.src = ev.target.result;
+  reader.readAsDataURL(f);
+});
+
+/* ------- toast ------- */
+let toastTimer = null;
+function showToast(msg, dur = 2000){
+  toast.textContent = msg; toast.style.opacity = '1';
+  clearTimeout(toastTimer); toastTimer = setTimeout(()=> toast.style.opacity = '0', dur);
+}
+
+/* ------- جمع بيانات النموذج ------- */
+function collectForm(){
+  const bookerName = document.getElementById('bookerName').value.trim();
+  const phone = document.getElementById('phone').value.trim();
+  const trip = document.getElementById('tripSelect').value;
+  const n = parseInt(numPeople.value||1);
+  const names = [];
+  for(let i=1;i<=n;i++){
+    const el = document.getElementById('name'+i);
+    names.push(el ? el.value.trim() : '');
+  }
+  const typeFields = {};
+  document.querySelectorAll('#typeSpecific input').forEach(i=>{ if(i.id) typeFields[i.id]=i.value; });
+  const passportPresent = !!(passportFile.files && passportFile.files[0]);
+  return {bookerName, phone, trip, numPeople:n, names, typeFields, passportPresent, timestamp:new Date().toISOString()};
+}
+
+/* ------- حفظ محلي (احفظ الحجز) ------- */
+const DRAFT_KEY = 'lastBookingDraft_orig';
+const BOOKINGS_KEY = 'bookings_orig';
+
+saveBtn.addEventListener('click', (e)=>{
+  e.preventDefault();
+  const data = collectForm();
+  // append booking even لو ناقص
+  const arr = JSON.parse(localStorage.getItem(BOOKINGS_KEY) || '[]');
+  arr.push(Object.assign({id:Date.now(), paid:false}, data));
+  localStorage.setItem(BOOKINGS_KEY, JSON.stringify(arr));
+  // save as last draft
+  localStorage.setItem(DRAFT_KEY, JSON.stringify(data));
+  showToast('تم حفظ الحجز محلياً');
+});
+
+/* ------- استرجاع المسودة عند التحميل ------- */
+window.addEventListener('load', ()=>{
+  const raw = localStorage.getItem(DRAFT_KEY);
+  if(raw){
+    try{
+      const draft = JSON.parse(raw);
+      if(draft.bookerName) document.getElementById('bookerName').value = draft.bookerName;
+      if(draft.phone) document.getElementById('phone').value = draft.phone;
+      if(draft.trip) document.getElementById('tripSelect').value = draft.trip;
+      if(draft.numPeople){ numPeople.value = draft.numPeople; buildNameFields(parseInt(draft.numPeople||1)); }
+      if(Array.isArray(draft.names)){ draft.names.forEach((v,i)=>{ const el=document.getElementById('name'+(i+1)); if(el) el.value = v; }); }
+      if(draft.passportPresent){ /* لا نستعيد ملف الجواز لأسباب أمان المتصفح */ }
+      showToast('تم استرجاع المسودة المحفوظة',1200);
+    }catch(e){ console.warn('draft parse err', e); }
+  }
+  // ensure initial type-specific fields for selected top option
+  const topSelected = document.querySelector('.option.selected');
+  if(topSelected) renderTypeSpecific(topSelected.dataset.type);
+  updateSummary();
+});
+
+/* ------- تحقق الحقول المطلوبة للدفع ------- */
+function validateForPayment(){
+  const requiredIds = ['bookerName','tripSelect','numPeople','phone','name1'];
+  let ok = true;
+  const missing = [];
+  requiredIds.forEach(id=>{
+    const el = document.getElementById(id);
+    if(!el || (el.value || '').trim() === ''){ ok = false; missing.push(id); }
+  });
+  // dynamic names
+  const n = parseInt(numPeople.value||1);
+  for(let i=2;i<=n;i++){
+    const el = document.getElementById('name'+i);
+    if(!el || el.value.trim() === ''){ ok = false; missing.push('name'+i); }
+  }
+  // passport must be present
+  if(!(passportFile.files && passportFile.files[0])){ ok = false; missing.push('passport'); }
+  if(!ok){
+    // animate the req-under elements corresponding
+    missing.forEach(m=>{
+      let reqId = m.startsWith('name') ? 'req-'+m : 'req-'+m;
+      if(m === 'passport') reqId = 'req-passport';
+      const el = document.getElementById(reqId.replace('req-','req-'));
+      // find corresponding req-under by id mapping:
+      const mapping = {
+        'bookerName':'req-booker','tripSelect':'req-trip','numPeople':'req-num','phone':'req-phone','name1':'req-name1'
+      };
+      let showEl = null;
+      if(mapping[m]) showEl = document.getElementById(mapping[m]);
+      else if(m.startsWith('name')) showEl = document.getElementById('req-'+m);
+      else if(m === 'passport') showEl = document.getElementById('req-passport');
+      if(showEl) showEl.animate([{opacity:1},{opacity:0.4},{opacity:1}], {duration:700});
+    });
+  }
+  return ok;
+}
+
+/* ------- زر احجز الآن (يتحقق ثم يستدعي endpoint السيرفر) ------- */
+bookNowBtn.addEventListener('click', async (e)=>{
+  e.preventDefault();
+  if(!validateForPayment()){ showToast('الرجاء ملء جميع الحقول'); return; }
+  const booking = collectForm();
+  // save locally as unpaid before redirect to الدفع
+  const arr = JSON.parse(localStorage.getItem(BOOKINGS_KEY) || '[]');
+  arr.push(Object.assign({id:Date.now(), paid:false}, booking));
+  localStorage.setItem(BOOKINGS_KEY, JSON.stringify(arr));
+  // call server endpoint to create payment (server must implement /api/create_payment)
+  try{
+    const res = await fetch('/api/create_payment', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(booking)});
+    const data = await res.json();
+    if(!res.ok){ showToast(data.message || 'خطأ في إنشاء الدفع'); return; }
+    if(data.iframe_url){ window.open(data.iframe_url, '_blank'); }
+    else showToast('لم يتم استلام رابط الدفع من السيرفر');
+  }catch(err){
+    console.error(err);
+    showToast('خطأ في الاتصال بالسيرفر');
+  }
+});
+
+/* ------- تحديث الملخص أثناء الكتابة ------- */
+function updateSummary(){
+  const d = collectForm();
+  const tripTitle = (TRIPS.find(t=>t.id === d.trip) || {}).title || '—';
+  const namesText = (d.names && d.names.filter(Boolean).length) ? d.names.filter(Boolean).join(' ، ') : '—';
+  const passportText = d.passportPresent ? 'مرفوعة' : 'غير مرفوعة';
+  summaryContent.innerHTML = `
+    <div class="row">الاسم: ${d.bookerName || '—'}</div>
+    <div class="row">الرحلة: ${tripTitle}</div>
+    <div class="row">عدد الأفراد: ${d.numPeople}</div>
+    <div class="row">أسماء المسافرين: ${namesText}</div>
+    <div class="row">الهاتف: ${d.phone || '—'}</div>
+    <div class="row">صورة الجواز: ${passportText}</div>
+  `;
+}
+document.querySelectorAll('#bookingForm input, #bookingForm select').forEach(el=>{
+  el.addEventListener('input', updateSummary);
+});
+document.getElementById('tripSelect').addEventListener('change', updateSummary);
+numPeople.addEventListener('change', updateSummary);
+passportFile.addEventListener('change', updateSummary);
+
+</script>
+</body>
+</html>
